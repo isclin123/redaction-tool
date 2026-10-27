@@ -333,6 +333,11 @@
   function maskValue(label, value) {
     const compact = value.replace(/\s+/g, "");
     if (label === "姓名") return maskPersonName(compact);
+    if (label === "金额") {
+      // 数字全部遮住，保留「人民币」「¥」和单位「元／万元／亿元」：「人民币200000元」→「人民币***元」。
+      const amount = /^((?:人民币|¥|￥)?)\s*.*?\s*((?:亿|万)?元)$/.exec(value);
+      if (amount) return `${amount[1]}***${amount[2]}`;
+    }
     const letters = chars(compact);
     if (ID_LIKE.has(label) && letters.length >= 6) {
       return letters.slice(0, 3).join("") + "*".repeat(Math.max(4, letters.length - 6)) + letters.slice(-3).join("");
