@@ -1,0 +1,59 @@
+/* 紧凑布局：案件手机 App 全时使用；文件脱敏在 1160px 以下使用。
+   与 styles.css 共享 tokens 和组件；按原有顺序保留响应式规则。 */
+
+.content {
+  padding: var(--sp-5) var(--sp-5) calc(var(--tabbar-h) + var(--sp-6) + env(safe-area-inset-bottom));
+}
+
+.dashboard-head {
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: var(--sp-4);
+}
+
+.dashboard-clock {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.daily-proverb {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  max-width: none;
+  margin: 0;
+  text-align: left;
+}
+
+.new-case-workspace {
+  grid-template-columns: 1fr;
+}
+
+.case-dossier-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.case-party-row {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) var(--control-h);
+}
+
+.case-party-name-field {
+  grid-column: span 2;
+}
+
+.split,
+.contract-split,
+.grid-2,
+.grid-3 {
+  grid-template-columns: 1fr;
+  gap: var(--sp-5);
+}
+
+.split > .panel:first-child {
+  padding-right: 0;
+}
+
+.split > .panel + .panel {
+  border-top: 1px solid var(--rule);
+  border-left: 0;
+  padding-top: var(--sp-5);
+  padding-left: 0;
+}

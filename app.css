@@ -1,0 +1,111 @@
+/* 文件脱敏独有的少量样式；其余全部来自 design/（从案件管理系统同步的「案卷」设计）。只用 design 里的 token。 */
+
+.app-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2) var(--sp-3);
+  border-bottom: 1px solid var(--blue-line);
+  padding: var(--sp-2) max(var(--sp-5), env(safe-area-inset-right)) var(--sp-2) max(var(--sp-5), env(safe-area-inset-left));
+  background: var(--blue-tint);
+  color: var(--ink);
+  font-size: var(--text-md);
+}
+
+.app-banner[hidden] {
+  display: none;
+}
+
+.app-banner.is-error {
+  border-color: var(--red-line);
+  background: var(--red-tint);
+}
+
+.page-note {
+  max-width: 72ch;
+  margin: 0 0 var(--sp-4);
+  text-wrap: pretty;
+}
+
+.term-hint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-1) var(--sp-2);
+  margin-top: calc(var(--sp-2) * -1);
+}
+
+.term-hint-actions {
+  display: inline-flex;
+  gap: var(--sp-1);
+}
+
+.result-head {
+  margin-top: var(--sp-5);
+}
+
+.result-head h3 {
+  margin: 0;
+}
+
+.term-form {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--sp-3);
+  max-width: 640px;
+}
+
+.term-form label {
+  display: grid;
+  flex: 1 1 auto;
+  gap: var(--sp-1);
+  min-width: 0;
+}
+
+.term-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  max-width: 960px;
+  margin: var(--sp-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.term-list li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  min-width: 0;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--r-1);
+  padding-left: var(--sp-3);
+  background: var(--surface);
+  overflow-wrap: anywhere;
+}
+
+.term-list li button {
+  border-color: transparent;
+  background: transparent;
+  color: var(--ink-3);
+}
+
+@media (max-width: 760px) {
+  .app-banner {
+    padding-inline: var(--sp-4);
+  }
+
+  .term-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .term-list li {
+    max-width: 100%;
+  }
+
+  .term-list li button {
+    min-height: 44px;
+  }
+}

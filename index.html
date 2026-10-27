@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="app-version" content="2026.10.26.2318" />
+    <meta name="theme-color" content="#f3f2ed" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="文件脱敏" />
+    <meta name="description" content="导入 Word 或粘贴文字，逐条确认敏感信息，保留排版导出。全部在本机处理，离线可用。" />
+    <title>文件脱敏</title>
+    <link rel="icon" type="image/svg+xml" href="design/brand-dossier.svg" />
+    <link rel="manifest" href="manifest.webmanifest?v=2026.10.26.2318" />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+    <link rel="stylesheet" href="design/styles.css?v=2026.10.26.2318" />
+    <link rel="stylesheet" href="design/compact.css?v=2026.10.26.2318" media="(max-width: 1160px)" />
+    <link rel="stylesheet" href="design/mobile.css?v=2026.10.26.2318" media="(max-width: 760px)" />
+    <link rel="stylesheet" href="app.css?v=2026.10.26.2318" />
+  </head>
+  <body data-app="redaction">
+    <main id="appView" class="app-view">
+      <a class="skip-link" href="#mainContent">跳到主要内容</a>
+      <header class="topbar">
+        <div class="brand">
+          <img class="brand-mark" src="design/brand-dossier.svg" width="28" height="28" alt="" aria-hidden="true" />
+          <h1>文件脱敏</h1>
+        </div>
+        <nav id="moduleNav" class="web-nav" aria-label="文件脱敏导航">
+          <button type="button" class="is-active" data-view="work" data-icon="eye-off" aria-current="page"><span class="nav-label">脱敏</span></button>
+          <button type="button" data-view="terms" data-icon="library"><span class="nav-label">敏感词库</span></button>
+        </nav>
+      </header>
+
+      <div id="updateBanner" class="app-banner" role="status" hidden>
+        <span>新版本已经准备好。</span>
+        <button type="button" id="applyUpdateButton" class="ghost" data-icon="refresh">立即更新</button>
+      </div>
+      <div id="unsupportedBanner" class="app-banner is-error" role="alert" hidden></div>
+
+      <div class="layout">
+        <section id="mainContent" class="content" tabindex="-1">
+          <section id="workModule" class="module" data-module="work">
+            <div class="module-head">
+              <div><h2>文件脱敏</h2></div>
+            </div>
+            <div class="split redaction-split">
+              <section class="panel">
+                <h3>原文</h3>
+                <div class="form-grid">
+                  <div class="form-field wide">
+                    <span class="field-label">导入 Word 文档</span>
+                    <div class="file-upload-control" data-file-upload-control>
+                      <input id="redactionFile" name="redactionFile" class="file-upload-input" type="file"
+                        accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
+                      <label class="file-upload-button" for="redactionFile">选择 Word 文件</label>
+                      <span class="file-upload-hint" data-file-upload-name data-empty-label="未选择文件">未选择文件</span>
+                    </div>
+                  </div>
+                  <p class="meta-line wide">支持 .docx，最大 15 MB，保留段落、表格及文字样式；旧版 .doc 请先在 Word 或 WPS 中另存为 .docx。文件只在这台设备上处理，不会上传，也不会保存。</p>
+                  <div class="wide" id="documentInfo" hidden></div>
+                  <label class="wide">
+                    <span>本次自定义敏感词</span>
+                    <input id="customTerms" name="customTerms" autocomplete="off" placeholder="多个词用逗号分隔…" />
+                  </label>
+                  <p class="meta-line wide term-hint">
+                    <span id="libraryHint">敏感词库还没有词。</span>
+                    <span class="term-hint-actions">
+                      <button type="button" id="saveTermsButton" class="text-button">存入词库</button>
+                      <button type="button" class="text-button" data-view="terms">管理词库</button>
+                    </span>
+                  </p>
+                  <label class="wide">
+                    <span>待脱敏文字</span>
+                    <textarea id="sourceText" name="text" rows="14" placeholder="粘贴需要脱敏的文字，或在上方导入 Word 文档…"></textarea>
+                  </label>
+                </div>
+                <div class="tool-actions">
+                  <button id="previewButton" type="button" class="primary" data-icon="eye">预览脱敏</button>
+                  <button id="exportButton" type="button" class="ghost" data-icon="download" disabled>导出 Word</button>
+                </div>
+                <p id="workStatus" class="status" role="status"></p>
+              </section>
+              <section class="panel">
+                <h3>确认与恢复</h3>
+                <div id="matchList" class="match-list">
+                  <div class="empty-state">
+                    <strong>还没有识别结果</strong>
+                    <p>点击「预览脱敏」后，识别到的姓名、证件号、电话、账号等会逐条列出，可取消勾选以保留原文。</p>
+                  </div>
+                </div>
+                <div id="reviewList" class="rule-check-list"></div>
+                <div class="panel-top result-head">
+                  <h3 id="redactedTextLabel">脱敏结果</h3>
+                  <button type="button" id="copyResultButton" class="ghost" data-icon="copy" disabled>复制文字</button>
+                </div>
+                <p id="resultNotice" class="result-notice">这里显示文字校对预览；导出的 Word 保留原文档排版。</p>
+                <textarea id="redactedText" class="redacted" aria-labelledby="redactedTextLabel" placeholder="脱敏结果会显示在这里…" readonly></textarea>
+              </section>
+            </div>
+          </section>
+
+          <section id="termsModule" class="module hidden" data-module="terms">
+            <div class="module-head">
+              <div><h2>敏感词库</h2></div>
+            </div>
+            <p class="meta-line page-note">词库里的词每次脱敏都会自动识别，适合常用的当事人姓名、公司简称、项目代号等。只保存在这台设备上。</p>
+            <form id="termForm" class="term-form">
+              <label>
+                <span>添加敏感词</span>
+                <input id="newTerms" name="newTerms" autocomplete="off" placeholder="多个词用逗号分隔…" />
+              </label>
+              <button type="submit" class="primary" data-icon="plus">添加</button>
+            </form>
+            <p id="termStatus" class="status" role="status"></p>
+            <div id="termList"></div>
+          </section>
+        </section>
+      </div>
+    </main>
+
+    <script src="vendor/fflate-0.8.2.min.js?v=2026.10.26.2318"></script>
+    <script src="engine/rules.js?v=2026.10.26.2318"></script>
+    <script src="engine/word.js?v=2026.10.26.2318"></script>
+    <script src="store.js?v=2026.10.26.2318"></script>
+    <script src="app.js?v=2026.10.26.2318"></script>
+  </body>
+</html>

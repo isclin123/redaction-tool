@@ -1,0 +1,16 @@
+{
+  "id": "./",
+  "name": "文件脱敏",
+  "short_name": "文件脱敏",
+  "description": "导入 Word 或粘贴文字，逐条确认敏感信息，保留排版导出。全部在本机处理，离线可用。",
+  "lang": "zh-CN",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fbfaf7",
+  "theme_color": "#f3f2ed",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

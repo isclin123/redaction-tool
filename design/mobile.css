@@ -1,0 +1,760 @@
+/* 手机布局：案件 App 全时使用；文件脱敏在 760px 以下使用。
+   与 styles.css 共享 tokens 和组件；按原有顺序保留响应式规则。 */
+
+:root {
+  --control-h: 44px;
+  --control-font: var(--text-lg);
+}
+
+.drawer {
+  top: auto;
+  left: 0;
+  width: 100%;
+  max-height: 85vh;
+  max-height: 85dvh;
+  border-radius: 12px 12px 0 0;
+  box-shadow: var(--shadow-sheet);
+  animation-name: sheetIn;
+}
+
+.drawer::before {
+  content: "";
+  align-self: center;
+  flex: 0 0 auto;
+  width: 36px;
+  height: 4px;
+  margin-top: 8px;
+  border-radius: var(--r-pill);
+  background: var(--rule-strong);
+}
+
+.drawer-head {
+  min-height: 48px;
+  padding-left: var(--sp-4);
+}
+
+.drawer-body {
+  padding: var(--sp-2) var(--sp-4) calc(var(--sp-4) + env(safe-area-inset-bottom));
+}
+
+.drawer-foot {
+  padding-left: var(--sp-4);
+  padding-right: var(--sp-4);
+}
+
+@keyframes sheetIn {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-backdrop {
+  padding: 12px;
+}
+
+.modal-panel,
+.new-case-modal {
+  padding: var(--sp-4);
+}
+
+.text-button,
+.small-button,
+.compact-actions button,
+.case-detail-section-actions button,
+.milestone-node-actions button,
+.locate-button,
+.pagination .inline-actions button {
+  min-height: 44px;
+}
+
+.global-toast {
+  top: auto;
+  right: 16px;
+  bottom: calc(var(--tabbar-h) + 12px + env(safe-area-inset-bottom));
+  left: 16px;
+  max-width: none;
+  text-align: center;
+}
+
+.login-view {
+  grid-template-columns: 1fr;
+  align-content: start;
+}
+
+.login-brand {
+  gap: var(--sp-2);
+  border-right: 0;
+  border-bottom: 1px solid var(--rule);
+  padding: calc(var(--sp-5) + env(safe-area-inset-top)) var(--sp-4) var(--sp-5);
+}
+
+.firm-logo {
+  width: 40px;
+  height: 40px;
+  margin-bottom: var(--sp-1);
+}
+
+.firm-name {
+  font-size: var(--text-2xl);
+}
+
+.login-tagline {
+  font-size: var(--text-md);
+}
+
+.login-kicker {
+  margin-top: var(--sp-2);
+  border-top: 0;
+  padding-top: 0;
+}
+
+.login-panel {
+  width: auto;
+  margin: 0;
+  padding: var(--sp-5) var(--sp-4) var(--sp-6);
+}
+
+.login-panel .primary {
+  min-height: 44px;
+}
+
+.topbar {
+  height: calc(48px + env(safe-area-inset-top));
+  padding: env(safe-area-inset-top) var(--sp-2) 0 var(--sp-4);
+}
+
+.brand h1 {
+  display: none;
+}
+
+.brand {
+  padding-left: 0;
+}
+
+.mobile-page-title {
+  display: block;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: var(--ink);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.top-actions {
+  gap: 0;
+}
+
+.topbar .icon-button {
+  width: 44px;
+  min-width: 44px;
+}
+
+.layout {
+  display: block;
+  min-height: 0;
+}
+
+.content {
+  padding: var(--sp-4) var(--sp-4) calc(var(--tabbar-h) + var(--sp-6) + env(safe-area-inset-bottom));
+}
+
+.module {
+  gap: var(--sp-4);
+}
+
+/* 手机端页面标题由顶栏显示，页内标题只保留给读屏 */
+.module-head > div:first-child {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.module-head {
+  min-height: 0;
+}
+
+.module-head:not(:has(.inline-actions, .page-meta, button)) {
+  display: none;
+}
+
+.tab-strip {
+  gap: var(--sp-4);
+  margin: 0 calc(var(--sp-4) * -1);
+  padding: 0 var(--sp-4);
+  scroll-padding-inline: var(--sp-4);
+  scroll-snap-type: x proximity;
+}
+
+.tab-strip button {
+  min-height: 44px;
+  scroll-snap-align: start;
+}
+
+.dashboard-summary {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.summary-item {
+  min-height: 68px;
+  padding: var(--sp-2) var(--sp-3);
+}
+
+.summary-item:nth-child(3) {
+  border-right: 0;
+}
+
+.summary-item strong {
+  font-size: var(--text-xl);
+}
+
+.summary-item span {
+  font-size: var(--text-xs);
+}
+
+.summary-cases {
+  grid-column: 1 / -1;
+  border-top: 1px solid var(--rule);
+}
+
+.dashboard-reminder-panel .panel-top {
+  flex-wrap: wrap;
+}
+
+.dashboard-filters {
+  width: 100%;
+}
+
+.dashboard-kind-filter {
+  flex: 1 1 auto;
+  width: auto;
+}
+
+/* 提醒表格 → 卡片 */
+.dashboard-reminder-table thead {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.dashboard-reminder-table,
+.dashboard-reminder-table tbody {
+  display: block;
+}
+
+.dashboard-reminder-table tr {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    "status date"
+    "case case"
+    "node node"
+    "actions actions";
+  gap: 6px var(--sp-2);
+  border-bottom: 1px solid var(--rule);
+  padding: var(--sp-3) 0 var(--sp-4);
+}
+
+.dashboard-reminder-table td,
+.dashboard-reminder-table td:first-child,
+.dashboard-reminder-table td:last-child {
+  display: block;
+  width: auto;
+  border: 0;
+  padding: 0;
+}
+
+.dashboard-reminder-table tbody tr:hover td {
+  background: transparent;
+}
+
+.dashboard-reminder-table .col-status {
+  grid-area: status;
+}
+
+.dashboard-reminder-table .col-date {
+  grid-area: date;
+  align-self: center;
+}
+
+.dashboard-reminder-table .col-case {
+  grid-area: case;
+}
+
+.dashboard-reminder-table .col-node {
+  grid-area: node;
+  width: auto;
+  color: var(--ink-2);
+}
+
+.dashboard-reminder-table .col-actions {
+  grid-area: actions;
+  margin-top: var(--sp-1);
+  white-space: normal;
+}
+
+.dashboard-reminder-table .compact-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.dashboard-reminder-table .compact-actions button {
+  min-height: 44px;
+  font-size: var(--text-md);
+}
+
+.case-db-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.case-db-search-group {
+  max-width: none;
+}
+
+.case-db-search-group button {
+  width: var(--control-h);
+  min-width: var(--control-h);
+  padding: 0;
+  font-size: 0;
+}
+
+.case-filter-toggle {
+  display: inline-flex;
+}
+
+.case-db-filter-row {
+  display: none;
+}
+
+.case-db-toolbar.is-filter-open .case-filter-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-drawer-backdrop);
+  display: block;
+  background: rgba(29, 33, 37, 0.32);
+}
+
+.case-db-toolbar.is-filter-open .case-db-filter-row {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: var(--z-drawer);
+  display: grid;
+  gap: var(--sp-3);
+  max-height: 85vh;
+  max-height: 85dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: 12px 12px 0 0;
+  padding: var(--sp-3) var(--sp-4) calc(var(--sp-4) + env(safe-area-inset-bottom));
+  background: var(--surface);
+  box-shadow: var(--shadow-sheet);
+  animation: sheetIn var(--dur) ease-out;
+}
+
+.case-filter-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+}
+
+.case-filter-sheet-head strong {
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.case-db-filter-row .custom-select-field {
+  width: auto;
+}
+
+.case-db-filter-row .custom-select-field > span:first-child {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip: auto;
+}
+
+.case-db-filter-row .custom-select-menu {
+  position: static;
+  margin-top: 4px;
+  box-shadow: none;
+}
+
+.case-filter-reset {
+  justify-self: start;
+  min-height: 44px;
+}
+
+.case-db-result-controls .custom-select {
+  width: 150px;
+}
+
+/* 案件表格 → 卡片 */
+.case-db-table thead {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.case-db-table,
+.case-db-table tbody {
+  display: block;
+}
+
+.case-db-table tr {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  grid-template-areas:
+    "status reminder ."
+    "case case case"
+    "progress progress progress"
+    "owner owner owner";
+  gap: 6px var(--sp-2);
+  border-bottom: 1px solid var(--rule);
+  padding: var(--sp-3) 0 var(--sp-4);
+}
+
+.case-db-table td,
+.case-db-table td:first-child,
+.case-db-table td:last-child {
+  display: block;
+  width: auto;
+  border: 0;
+  padding: 0;
+}
+
+.case-db-table tbody tr:hover td {
+  background: transparent;
+}
+
+.case-db-table tr {
+  position: relative;
+}
+
+.case-db-table .case-row-title::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.case-db-table .case-copy-id {
+  position: relative;
+  z-index: 1;
+}
+
+.case-db-table .col-case {
+  grid-area: case;
+}
+
+.case-db-table .col-status {
+  grid-area: status;
+}
+
+.case-db-table .col-reminder {
+  grid-area: reminder;
+}
+
+.case-db-table .col-progress {
+  grid-area: progress;
+}
+
+.case-db-table .col-owner {
+  grid-area: owner;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.case-owner-stack {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px var(--sp-2);
+  font-size: var(--text-sm);
+}
+
+.case-copy-id.text-button {
+  min-height: 44px;
+  margin: 0;
+  opacity: 1;
+}
+
+.case-list-top {
+  display: none;
+}
+
+.responsive-table thead {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.responsive-table,
+.responsive-table tbody,
+.responsive-table tr {
+  display: block;
+  width: 100%;
+}
+
+.responsive-table tr {
+  border-bottom: 1px solid var(--rule);
+  padding: var(--sp-3) 0;
+}
+
+.responsive-table td,
+.responsive-table td:first-child,
+.responsive-table td:last-child {
+  display: grid;
+  grid-template-columns: 5.5em minmax(0, 1fr);
+  gap: var(--sp-2);
+  border: 0;
+  padding: 3px 0;
+  white-space: normal;
+}
+
+.responsive-table td > * {
+  grid-column: 2;
+  justify-self: start;
+  max-width: 100%;
+}
+
+.responsive-table td::before {
+  content: attr(data-label);
+  color: var(--ink-3);
+  font-size: var(--text-xs);
+  line-height: 22px;
+}
+
+.responsive-table tbody tr:hover td {
+  background: transparent;
+}
+
+.case-dossier {
+  gap: var(--sp-2);
+  padding-bottom: var(--sp-4);
+}
+
+.case-dossier-title {
+  font-size: var(--text-xl);
+}
+
+.case-dossier-grid > div {
+  padding: var(--sp-2) var(--sp-3);
+}
+
+.case-dossier-grid dd {
+  font-size: var(--text-md);
+}
+
+.case-dossier-id {
+  font-size: var(--text-sm);
+}
+
+.case-dossier-grid .case-copy-id {
+  width: 44px;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.tab-strip:not(.is-scroll-end) {
+  -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 32px), transparent);
+  mask-image: linear-gradient(90deg, #000 calc(100% - 32px), transparent);
+}
+
+.case-dossier-actions button {
+  min-height: 44px;
+}
+
+.case-detail-pane-nav {
+  top: calc(48px + env(safe-area-inset-top));
+  margin-bottom: var(--sp-4);
+}
+
+.case-detail-section-head {
+  align-items: flex-start;
+}
+
+.case-detail-section-actions button {
+  min-height: 44px;
+}
+
+.case-edit-form[data-readonly="true"] {
+  grid-template-columns: 1fr;
+}
+
+.milestone-timeline {
+  padding-left: 28px;
+}
+
+.milestone-timeline::before {
+  left: 9px;
+}
+
+.milestone-node {
+  grid-template-columns: 1fr;
+  gap: var(--sp-2);
+}
+
+.milestone-node-marker {
+  left: -28px;
+}
+
+.milestone-node-date {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+}
+
+.milestone-node-actions {
+  justify-content: flex-start;
+}
+
+.milestone-node-actions button {
+  min-height: 44px;
+}
+
+.case-party-groups,
+.analysis-grid,
+.party-card-facts,
+.case-import {
+  grid-template-columns: 1fr;
+}
+
+.case-party-row {
+  grid-template-columns: 1fr;
+}
+
+.case-party-name-field {
+  grid-column: auto;
+}
+
+.case-party-remove {
+  width: 100%;
+}
+
+.case-document-preview {
+  height: 420px;
+  min-height: 320px;
+}
+
+.evidence-table .evidence-name strong {
+  font-weight: 600;
+}
+
+.form-grid,
+.tool-controls {
+  grid-template-columns: 1fr;
+}
+
+.preview-file {
+  width: 100%;
+}
+
+.preview-controls {
+  width: 100%;
+}
+
+.search-field {
+  flex: 1 1 auto;
+}
+
+.search-field input {
+  width: 100%;
+  min-height: 40px;
+}
+
+.preview-controls .icon-button {
+  width: 40px;
+  min-width: 40px;
+  min-height: 40px;
+}
+
+#contractZoomOut,
+#contractZoomIn,
+#contractPreviewZoom,
+.preview-controls .toolbar-sep:last-of-type {
+  display: none;
+}
+
+.document-preview {
+  height: 520px;
+  padding: var(--sp-2);
+}
+
+.contract-document-preview {
+  height: auto;
+}
+
+.document-page {
+  padding: calc(24px * var(--preview-zoom)) calc(18px * var(--preview-zoom)) calc(16px * var(--preview-zoom));
+}
+
+/* 主操作吸附在底部标签栏之上，不必滚过整页预览 */
+.contract-source .tool-actions,
+.redaction-split > .panel:first-child .tool-actions {
+  position: sticky;
+  bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+  z-index: var(--z-sticky);
+  margin: var(--sp-3) calc(var(--sp-4) * -1) 0;
+  border-top: 1px solid var(--rule);
+  padding: var(--sp-2) var(--sp-4);
+  background: var(--paper);
+}
+
+.tool-actions .primary {
+  flex: 1 1 auto;
+}
+
+/* 未就绪的导出按钮在手机上先不占位，生成结果后再出现 */
+.tool-actions button:disabled {
+  display: none;
+}
+
+.issue-top {
+  flex-wrap: wrap;
+}
+
+.activity-toolbar > label,
+.template-toolbar > label {
+  flex: 1 1 calc(50% - var(--sp-3));
+  width: auto;
+  min-width: 0;
+}
+
+.activity-toolbar > .activity-search,
+.template-toolbar > .template-search,
+#knowledgeSearchForm > label {
+  flex: 1 1 100%;
+  width: 100%;
+  max-width: none;
+}
+
+.template-card {
+  grid-template-columns: 1fr;
+  gap: var(--sp-2);
+}
+
+.template-card-actions {
+  justify-content: flex-start;
+}

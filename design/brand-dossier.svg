@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="title">
+  <title id="title">律师案件管理系统 · 案卷折页</title>
+  <g fill="#1f3a5f">
+    <path d="M43 8c0-3 2-4 5-3l31 13c3 1 4 3 4 6v44c0 3-1 5-4 7L62 85V46c0-5-2-8-7-10l-12-5Z"/>
+    <path d="M18 23c-3-1-5 0-5 3v44c0 3 1 5 4 7l31 15c3 1 5 0 5-3V46c0-3-1-5-4-6Z"/>
+  </g>
+</svg>
