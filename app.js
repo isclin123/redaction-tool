@@ -4,8 +4,16 @@
 
   const { buildPreview, applyRedactions, parseCustomTerms } = window.RedactionRules;
   const { WordDocument, textToDocx, DOCX_TYPE, MAX_UPLOAD } = window.RedactionWord;
+  const { ExtractedDocument } = window.RedactionLayout;
+  const Ocr = window.RedactionOcr;
+  const Pdf = window.RedactionPdf;
   const Store = window.RedactionStore;
+  const Components = window.RedactionComponents;
   const PAGE_SIZE = 50;
+  const MAX_IMAGE = 30 * 1024 * 1024;
+  const MAX_IMAGES = 30;
+  const NOTICE_WORD = "这里显示文字校对预览；导出的 Word 保留原文档排版。";
+  const NOTICE_EXTRACTED = "这里显示文字校对预览；导出的 Word 按读出的段落重新排版，只含文字。";
 
   const $ = (selector) => document.querySelector(selector);
   const els = {
@@ -29,10 +37,14 @@
     termList: $("#termList"),
     updateBanner: $("#updateBanner"),
     unsupportedBanner: $("#unsupportedBanner"),
+    componentStatus: $("#componentStatus"),
   };
 
   const state = {
-    source: null, // Word：{ filename, bytes, word }；粘贴文字时为 null
+    // Word：{ kind: "word", filename, bytes, word }；PDF：{ kind: "pdf", filename, bytes, doc }；
+    // 图片：{ kind: "image", filename, files, doc }；粘贴文字时为 null
+    source: null,
+    importing: false,
     sourceText: "",
     preview: null,
     page: 1,
@@ -113,44 +125,194 @@
     setNotice("", "请重新预览后再导出 Word。");
   }
 
+  function currentDocument() {
+    return state.source ? state.source.word || state.source.doc : null;
+  }
+
+  function showDocumentInfo(summary, warnings, extraButton = "") {
+    els.documentInfo.hidden = false;
+    els.documentInfo.innerHTML = `
+      <p class="meta-line">${escapeHtml(summary)}</p>
+      <div class="inline-actions">
+        <button type="button" id="clearDocumentButton" class="ghost">移除文档</button>
+        ${extraButton}
+      </div>
+      ${warnings.map((message) => `<p class="status">${escapeHtml(message)}</p>`).join("")}`;
+  }
+
   function loadDocument(filename, bytes) {
     const word = new WordDocument(filename, bytes);
-    state.source = { filename, bytes, word };
+    state.source = { kind: "word", filename, bytes, word };
     els.sourceText.value = word.text;
     els.sourceText.readOnly = true;
     const info = word.info();
-    els.documentInfo.hidden = false;
-    els.documentInfo.innerHTML = `
-      <p class="meta-line">已导入 ${escapeHtml(filename)} · ${info.characters.toLocaleString("zh-CN")} 字。下方原文仅供校对。</p>
-      <button type="button" id="clearDocumentButton" class="ghost">移除文档</button>
-      ${info.warnings.map((message) => `<p class="status">${escapeHtml(message)}</p>`).join("")}`;
+    showDocumentInfo(`已导入 ${filename} · ${info.characters.toLocaleString("zh-CN")} 字。下方原文仅供校对。`, info.warnings);
+    setNotice("", NOTICE_WORD);
+    updateFileHint();
+  }
+
+  /** 「第 1–3、5 页」 */
+  function pageList(labels) {
+    const numbers = labels.map((label) => Number((label.match(/\d+/) || [])[0])).filter(Boolean);
+    const runs = [];
+    for (const number of numbers) {
+      const last = runs[runs.length - 1];
+      if (last && number === last[1] + 1) last[1] = number;
+      else runs.push([number, number]);
+    }
+    return runs.map(([from, to]) => (from === to ? `${from}` : `${from}–${to}`)).join("、");
+  }
+
+  function loadExtracted(source) {
+    const { doc } = source;
+    state.source = source;
+    els.sourceText.value = doc.text;
+    els.sourceText.readOnly = true;
+    const info = doc.info();
+    const characters = info.characters.toLocaleString("zh-CN");
+    let summary;
+    let extra = "";
+    if (source.kind === "pdf") {
+      const scanned = info.ocrPages.length === info.pages ? "（扫描件，已识别文字）" : info.ocrPages.length ? `（第 ${pageList(info.ocrPages)} 页是扫描件，已识别文字）` : "";
+      summary = `已读取 ${source.filename} · ${info.pages} 页${scanned} · ${characters} 字。下方原文仅供校对。`;
+      if (info.ocrPages.length < info.pages) extra = '<button type="button" id="ocrAllButton" class="ghost">文字不对？按图片重新识别</button>';
+    } else {
+      summary = info.pages > 1
+        ? `已识别 ${info.pages} 张图片（${source.filename} 等）· ${characters} 字。下方原文仅供校对。`
+        : `已识别 ${source.filename} · ${characters} 字。下方原文仅供校对。`;
+    }
+    showDocumentInfo(summary, info.warnings, extra);
+    setNotice("", NOTICE_EXTRACTED);
     updateFileHint();
   }
 
   function clearSource() {
     state.source = null;
+    state.importing = false;
     els.file.value = "";
     els.sourceText.readOnly = false;
     els.sourceText.value = "";
     els.documentInfo.hidden = true;
     els.documentInfo.innerHTML = "";
+    els.previewButton.disabled = Boolean(unsupportedReason());
+    setNotice("", NOTICE_WORD);
     updateFileHint();
   }
 
+  function pdfWarnings(read) {
+    const warnings = ["导出的 Word 只有文字，不带原 PDF 的图片、印章、签名和版式。"];
+    const scanned = read.pages.filter((page) => page.ocr).map((page) => page.label);
+    if (scanned.length) {
+      warnings.push(`${scanned.length === read.pages.length ? "这个 PDF 是扫描件" : `第 ${pageList(scanned)} 页是扫描图片`}，文字是识别出来的，可能有错字、漏字，请对照原件核对，尤其是姓名、证件号和金额。`);
+    }
+    if (read.skipped) warnings.push(`有 ${read.skipped} 个斜排或竖排的字（如水印、骑缝章文字）没有读取，导出的 Word 里不会有它们。`);
+    return warnings;
+  }
+
+  const IMAGE_WARNING = "文字是从图片识别出来的，可能有错字、漏字，请对照原图核对，尤其是姓名、证件号和金额。导出的 Word 只有文字，不带原图片。";
+
+  /** 读取期间显示进度和「取消」；返回 false 表示已被取消或换了别的文件。 */
+  function startImport(filename) {
+    state.importing = true;
+    els.previewButton.disabled = true;
+    els.sourceText.readOnly = true;
+    els.sourceText.value = "";
+    els.documentInfo.hidden = false;
+    els.documentInfo.innerHTML = `
+      <p class="meta-line">正在读取 ${escapeHtml(filename)}…</p>
+      <div class="inline-actions"><button type="button" id="clearDocumentButton" class="ghost">取消</button></div>`;
+    setNotice("is-working", "正在读取文件，请稍候…");
+    const revision = state.revision;
+    return {
+      cancelled: () => revision !== state.revision,
+      progress: (text) => {
+        if (revision === state.revision) setStatus(els.workStatus, text);
+      },
+    };
+  }
+
+  function finishImport() {
+    state.importing = false;
+    els.previewButton.disabled = Boolean(unsupportedReason());
+  }
+
+  async function importPdf(file, bytes, { forceOcr = false } = {}) {
+    const job = startImport(file.name);
+    const read = await Pdf.readPdf(bytes, { forceOcr, onProgress: job.progress, cancelled: job.cancelled });
+    if (!read || job.cancelled()) return;
+    const doc = new ExtractedDocument({ filename: file.name, kind: "pdf", pages: read.pages, warnings: pdfWarnings(read) });
+    finishImport();
+    loadExtracted({ kind: "pdf", filename: file.name, bytes, doc });
+    setStatus(els.workStatus, "PDF 已读取。请核对下方文字，可补充敏感词，再点击「预览脱敏」。");
+  }
+
+  async function importImages(files) {
+    const job = startImport(files.length > 1 ? `${files.length} 张图片` : files[0].name);
+    const pages = [];
+    for (const [index, file] of files.entries()) {
+      if (job.cancelled()) return;
+      job.progress(files.length > 1 ? `正在识别第 ${index + 1} / ${files.length} 张图片的文字…` : "正在识别图片里的文字…");
+      const bitmap = await Ocr.decodeImage(file);
+      if (job.cancelled()) {
+        bitmap.close();
+        return;
+      }
+      const result = await Ocr.recognize(bitmap);
+      pages.push({ label: `第 ${index + 1} 张`, ...result, ocr: true });
+    }
+    if (job.cancelled()) return;
+    const doc = new ExtractedDocument({ filename: files[0].name, kind: "image", pages, warnings: [IMAGE_WARNING] });
+    finishImport();
+    loadExtracted({ kind: "image", filename: files[0].name, files, doc });
+    setStatus(els.workStatus, "图片文字已识别。请对照原图核对下方文字，可补充敏感词，再点击「预览脱敏」。");
+  }
+
   async function importFile() {
-    const file = els.file.files && els.file.files[0];
-    if (!file) return;
+    const files = Array.from(els.file.files || []);
+    if (!files.length) return;
     invalidate();
     const revision = state.revision;
-    setStatus(els.workStatus, `正在读取 ${file.name}…`);
     try {
+      const images = files.filter((file) => Ocr.isImageFile(file));
+      if (files.length > 1 && images.length !== files.length) throw new Error("Word 和 PDF 请一次导入一个；一次选多个时只能都是图片。");
+      if (images.length) {
+        if (images.length > MAX_IMAGES) throw new Error(`一次最多 ${MAX_IMAGES} 张图片，请分批导入。`);
+        const tooLarge = images.find((file) => file.size > MAX_IMAGE);
+        if (tooLarge) throw new Error(`${tooLarge.name} 超过 30 MB，请换一张小一些的图片。`);
+        images.sort((a, b) => a.name.localeCompare(b.name, "zh-CN", { numeric: true }));
+        await importImages(images);
+        return;
+      }
+      const [file] = files;
+      if (/\.pdf$/i.test(file.name) || file.type === "application/pdf") {
+        if (file.size > Pdf.MAX_PDF) throw new Error("PDF 不能超过 60 MB，请拆分后再导入。");
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        if (revision !== state.revision) return;
+        await importPdf(file, bytes);
+        return;
+      }
       if (/\.doc$/i.test(file.name)) throw new Error("这是旧版 .doc 文件。请先在 Word 或 WPS 中「另存为」.docx，再导入。");
-      if (!/\.docx$/i.test(file.name)) throw new Error("请选择 .docx 格式的 Word 文档。");
+      if (!/\.docx$/i.test(file.name)) throw new Error("请选择 Word（.docx）、PDF 或图片（JPG、PNG 等）。");
       if (file.size > MAX_UPLOAD) throw new Error("Word 文档不能超过 15 MB。");
+      setStatus(els.workStatus, `正在读取 ${file.name}…`);
       const bytes = await file.arrayBuffer();
       if (revision !== state.revision) return;
       loadDocument(file.name, bytes);
       setStatus(els.workStatus, "Word 已导入。可补充敏感词，再点击「预览脱敏」。");
+    } catch (error) {
+      if (revision !== state.revision) return;
+      clearSource();
+      setStatus(els.workStatus, error.message, true);
+    }
+  }
+
+  async function reimportWithOcr() {
+    const source = state.source;
+    if (!source || source.kind !== "pdf") return;
+    invalidate();
+    const revision = state.revision;
+    try {
+      await importPdf({ name: source.filename }, source.bytes, { forceOcr: true });
     } catch (error) {
       if (revision !== state.revision) return;
       clearSource();
@@ -167,13 +329,14 @@
   async function runPreview() {
     invalidate();
     const revision = state.revision;
-    const text = state.source ? state.source.word.text : els.sourceText.value;
+    if (state.importing) return;
+    const text = state.source ? currentDocument().text : els.sourceText.value;
     setStatus(els.workStatus, "识别中…");
     setNotice("is-working", "正在识别敏感信息…");
     await nextFrame();
     if (revision !== state.revision) return;
     try {
-      const preview = buildPreview(text, { customTerms: allTerms(), document: state.source ? state.source.word : null });
+      const preview = buildPreview(text, { customTerms: allTerms(), document: currentDocument() });
       state.sourceText = text;
       state.preview = preview;
       state.page = 1;
@@ -231,11 +394,19 @@
 
   function exportBytes() {
     const { matches } = state.preview;
-    if (!state.source) return { bytes: textToDocx(applyRedactions(state.sourceText, matches)), filename: `脱敏文档_${new Date().toISOString().slice(0, 10)}.docx` };
+    const { source } = state;
+    if (!source) return { bytes: textToDocx(applyRedactions(state.sourceText, matches)), filename: `脱敏文档_${new Date().toISOString().slice(0, 10)}.docx` };
+    if (source.kind !== "word") {
+      // PDF 和图片：按读出的段落新建 Word，只含文字。
+      if (source.doc.text !== state.sourceText) throw new Error("文档已变化，请重新预览。");
+      const base = source.filename.replace(/\.[^.\/]+$/, "");
+      const count = source.kind === "image" && source.files.length > 1 ? `等${source.files.length}张` : "";
+      return { bytes: source.doc.export(matches), filename: `${base}${count}_脱敏.docx` };
+    }
     // 每次导出都从原文件重新读取一份，导出不会改动原文件。
-    const word = new WordDocument(state.source.filename, state.source.bytes);
+    const word = new WordDocument(source.filename, source.bytes);
     if (word.text !== state.sourceText) throw new Error("文档已变化，请重新预览。");
-    return { bytes: word.export(matches), filename: state.source.filename.replace(/\.docx$/i, "_脱敏.docx") };
+    return { bytes: word.export(matches), filename: source.filename.replace(/\.docx$/i, "_脱敏.docx") };
   }
 
   /** 手机/平板用系统分享（可存到「文件」或发到微信），电脑直接下载。 */
@@ -333,6 +504,16 @@
     navigator.serviceWorker.addEventListener("controllerchange", () => {
       if (state.updating) location.reload();
     });
+    prepareComponents();
+    window.addEventListener("online", prepareComponents);
+  }
+
+  /** PDF / 图片识别组件存到本机（见 components.js），只在下载中、没下完或刚下完时显示一行说明。 */
+  function prepareComponents() {
+    Components.prepare(({ stage, text, fresh }) => {
+      els.componentStatus.textContent = text;
+      els.componentStatus.hidden = !text || (stage === "ready" && !fresh);
+    });
   }
 
   function unsupportedReason() {
@@ -354,10 +535,12 @@
     else if (target.id === "previewButton") runPreview();
     else if (target.id === "exportButton") exportWord();
     else if (target.id === "clearDocumentButton") {
+      const cancelled = state.importing;
       clearSource();
       invalidate();
-      setStatus(els.workStatus, "可重新选择 Word 文档，或粘贴文字。");
-    } else if (target.id === "copyResultButton") {
+      setStatus(els.workStatus, cancelled ? "已取消读取。可重新选择文件，或粘贴文字。" : "可重新选择 Word、PDF、图片，或粘贴文字。");
+    } else if (target.id === "ocrAllButton") reimportWithOcr();
+    else if (target.id === "copyResultButton") {
       try {
         await navigator.clipboard.writeText(els.redactedText.value);
         showToast("已复制脱敏文字");

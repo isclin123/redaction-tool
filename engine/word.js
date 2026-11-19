@@ -378,19 +378,27 @@
     }
   }
 
-  // ---- 粘贴文字导出为 Word（与案件管理系统 build_docx 的版式一致，但不开启修订跟踪）----
+  // ---- 新建 Word：粘贴的文字、PDF 和图片读出的文字都按段落写成 .docx（A4，宋体小四，1.5 倍行距，不开启修订跟踪）----
 
   function escapeXml(value) {
     return value.replace(/[^\t\n\r -￿]/g, "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
 
-  function textToDocx(text) {
-    const paragraphs = text.split("\n").map((line) => `<w:p><w:pPr><w:pStyle w:val="Body"/></w:pPr>${line ? `<w:r><w:t xml:space="preserve">${escapeXml(line)}</w:t></w:r>` : ""}</w:p>`);
+  /** @param {{text:string, align?:string, indent?:boolean, heading?:boolean}[]} paragraphs */
+  function paragraphsToDocx(paragraphs) {
+    const body = paragraphs.map(({ text, align, indent, heading }) => {
+      const props = ['<w:pStyle w:val="Body"/>'];
+      if (indent) props.push('<w:ind w:firstLineChars="200" w:firstLine="480"/>');
+      if (align === "center") props.push('<w:jc w:val="center"/>');
+      const runProps = heading ? "<w:rPr><w:b/><w:sz w:val=\"32\"/><w:szCs w:val=\"32\"/></w:rPr>" : "";
+      const runs = String(text).split("\t").map((part, index) => `${index ? `<w:r>${runProps}<w:tab/></w:r>` : ""}${part ? `<w:r>${runProps}<w:t xml:space="preserve">${escapeXml(part)}</w:t></w:r>` : ""}`).join("");
+      return `<w:p><w:pPr>${props.join("")}</w:pPr>${runs}</w:p>`;
+    });
     const header = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
     const files = {
       "[Content_Types].xml": `${header}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="${DOCX_TYPE}.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/></Types>`,
       "_rels/.rels": `${header}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`,
-      "word/document.xml": `${header}<w:document xmlns:w="${W}"><w:body>${paragraphs.join("")}<w:sectPr><w:pgSz w:w="12240" w:h="15840"/><w:pgMar w:top="1080" w:right="1080" w:bottom="1080" w:left="1080"/></w:sectPr></w:body></w:document>`,
+      "word/document.xml": `${header}<w:document xmlns:w="${W}"><w:body>${body.join("")}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1440" w:right="1800" w:bottom="1440" w:left="1800" w:header="851" w:footer="992" w:gutter="0"/></w:sectPr></w:body></w:document>`,
       "word/_rels/document.xml.rels": `${header}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rIdStyles" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`,
       "word/styles.xml": `${header}<w:styles xmlns:w="${W}"><w:style w:type="paragraph" w:default="1" w:styleId="Body"><w:name w:val="Body"/><w:pPr><w:spacing w:after="120" w:line="360" w:lineRule="auto"/></w:pPr><w:rPr><w:rFonts w:ascii="SimSun" w:eastAsia="SimSun" w:hAnsi="SimSun"/><w:sz w:val="24"/><w:szCs w:val="24"/></w:rPr></w:style></w:styles>`,
     };
@@ -398,5 +406,9 @@
     return root.fflate.zipSync(Object.fromEntries(Object.entries(files).map(([name, value]) => [name, encoder.encode(value)])), { level: 6 });
   }
 
-  root.RedactionWord = { WordDocument, validateMatches, textToDocx, DOCX_TYPE, MAX_UPLOAD };
+  function textToDocx(text) {
+    return paragraphsToDocx(text.split("\n").map((line) => ({ text: line })));
+  }
+
+  root.RedactionWord = { WordDocument, validateMatches, textToDocx, paragraphsToDocx, DOCX_TYPE, MAX_UPLOAD };
 })(typeof window !== "undefined" ? window : globalThis);

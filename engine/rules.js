@@ -452,7 +452,7 @@
     preview.warnings = document ? document.warnings.slice() : [];
     preview.reviewChecklist = ["核对识别项，并逐项确认需要保留的内容。", "检查自由叙述中的人名、间接身份线索和自定义敏感词。"];
     if (document) {
-      preview.reviewChecklist.push("已包含正文、表格、页眉页脚和脚注尾注；导出时清除批注、文档属性及链接目标。");
+      preview.reviewChecklist.push(document.checklist || "已包含正文、表格、页眉页脚和脚注尾注；导出时清除批注、文档属性及链接目标。");
       for (const item of preview.matches) {
         item.location = (document.sections.find((part) => part.start <= item.start && item.start < part.end) || {}).name || "正文";
       }

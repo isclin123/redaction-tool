@@ -3,21 +3,21 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="app-version" content="2026.10.27.1046" />
+    <meta name="app-version" content="2026.11.18.1949" />
     <meta name="theme-color" content="#f3f2ed" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="文件脱敏" />
-    <meta name="description" content="导入 Word 或粘贴文字，逐条确认敏感信息，保留排版导出。全部在本机处理，离线可用。" />
+    <meta name="description" content="导入 Word、PDF、图片或粘贴文字，逐条确认敏感信息，导出脱敏后的 Word。全部在本机处理，离线可用。" />
     <title>文件脱敏</title>
     <link rel="icon" type="image/svg+xml" href="design/brand-dossier.svg" />
-    <link rel="manifest" href="manifest.webmanifest?v=2026.10.27.1046" />
+    <link rel="manifest" href="manifest.webmanifest?v=2026.11.18.1949" />
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
-    <link rel="stylesheet" href="design/styles.css?v=2026.10.27.1046" />
-    <link rel="stylesheet" href="design/compact.css?v=2026.10.27.1046" media="(max-width: 1160px)" />
-    <link rel="stylesheet" href="design/mobile.css?v=2026.10.27.1046" media="(max-width: 760px)" />
-    <link rel="stylesheet" href="app.css?v=2026.10.27.1046" />
+    <link rel="stylesheet" href="design/styles.css?v=2026.11.18.1949" />
+    <link rel="stylesheet" href="design/compact.css?v=2026.11.18.1949" media="(max-width: 1160px)" />
+    <link rel="stylesheet" href="design/mobile.css?v=2026.11.18.1949" media="(max-width: 760px)" />
+    <link rel="stylesheet" href="app.css?v=2026.11.18.1949" />
   </head>
   <body data-app="redaction">
     <main id="appView" class="app-view">
@@ -50,15 +50,15 @@
                 <h3>原文</h3>
                 <div class="form-grid">
                   <div class="form-field wide">
-                    <span class="field-label">导入 Word 文档</span>
+                    <span class="field-label">导入文件</span>
                     <div class="file-upload-control" data-file-upload-control>
-                      <input id="redactionFile" name="redactionFile" class="file-upload-input" type="file"
-                        accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
-                      <label class="file-upload-button" for="redactionFile">选择 Word 文件</label>
-                      <span class="file-upload-hint" data-file-upload-name data-empty-label="未选择文件">未选择文件</span>
+                      <input id="redactionFile" name="redactionFile" class="file-upload-input" type="file" multiple
+                        accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.pdf,application/pdf,image/*,.jpg,.jpeg,.png,.webp,.heic,.heif" />
+                      <label class="file-upload-button" for="redactionFile">选择文件</label>
+                      <span class="file-upload-hint" data-file-upload-name data-empty-label="Word、PDF 或图片">Word、PDF 或图片</span>
                     </div>
                   </div>
-                  <p class="meta-line wide">支持 .docx，最大 15 MB，保留段落、表格及文字样式；旧版 .doc 请先在 Word 或 WPS 中另存为 .docx。文件只在这台设备上处理，不会上传，也不会保存。</p>
+                  <p class="meta-line wide">Word（.docx）导出时保留原排版；PDF 和图片（可多选，按文件名顺序拼成一份）先读出文字，扫描件、照片自动识别，导出为只含文字的 Word。文件只在这台设备上处理，不会上传，也不会保存。<span id="componentStatus" role="status" hidden></span></p>
                   <div class="wide" id="documentInfo" hidden></div>
                   <label class="wide">
                     <span>本次自定义敏感词</span>
@@ -73,7 +73,7 @@
                   </p>
                   <label class="wide">
                     <span>待脱敏文字</span>
-                    <textarea id="sourceText" name="text" rows="14" placeholder="粘贴需要脱敏的文字，或在上方导入 Word 文档…"></textarea>
+                    <textarea id="sourceText" name="text" rows="14" placeholder="粘贴需要脱敏的文字，或在上方导入 Word、PDF、图片…"></textarea>
                   </label>
                 </div>
                 <div class="tool-actions">
@@ -120,10 +120,14 @@
       </div>
     </main>
 
-    <script src="vendor/fflate-0.8.2.min.js?v=2026.10.27.1046"></script>
-    <script src="engine/rules.js?v=2026.10.27.1046"></script>
-    <script src="engine/word.js?v=2026.10.27.1046"></script>
-    <script src="store.js?v=2026.10.27.1046"></script>
-    <script src="app.js?v=2026.10.27.1046"></script>
+    <script src="vendor/fflate-0.8.2.min.js?v=2026.11.18.1949"></script>
+    <script src="engine/rules.js?v=2026.11.18.1949"></script>
+    <script src="engine/word.js?v=2026.11.18.1949"></script>
+    <script src="engine/layout.js?v=2026.11.18.1949"></script>
+    <script src="engine/ocr.js?v=2026.11.18.1949"></script>
+    <script src="engine/pdf.js?v=2026.11.18.1949"></script>
+    <script src="store.js?v=2026.11.18.1949"></script>
+    <script src="components.js?v=2026.11.18.1949"></script>
+    <script src="app.js?v=2026.11.18.1949"></script>
   </body>
 </html>
